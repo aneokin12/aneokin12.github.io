@@ -26,8 +26,28 @@
         }
 
         .container {
-            max-width: 700px;
-            text-align: center;
+            max-width: 900px;
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+        }
+
+        .content {
+            text-align: left;
+            border-right: 1px solid rgba(211, 222, 227, 0.2);
+            padding-right: 3rem;
+        }
+
+        .profile {
+            flex-shrink: 0;
+        }
+
+        .profile img {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #fff;
         }
 
         h1 {
@@ -42,52 +62,131 @@
             margin-bottom: 1rem;
         }
 
-        a {
+        .text-content {
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(211, 222, 227, 0.15);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Text underline animation for links */
+        a.animated-link {
             color: #d3dee3;
-            text-decoration: underline;
+            text-decoration: none;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
         }
 
-        a:hover {
-            opacity: 0.8;
+        a.animated-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #d3dee3;
+            transition: width 0.3s ease;
         }
 
+        a.animated-link:hover::after {
+            width: 100%;
+        }
+
+        /* Social media buttons */
         .buttons {
-            margin-top: 2rem;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 1rem;
             flex-wrap: wrap;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
+        .social-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
             border: 2px solid #d3dee3;
-            border-radius: 4px;
+            border-radius: 50%;
             text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.2s, color 0.2s;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: #d3dee3;
+            overflow: hidden;
+            transition: transform 0.5s ease, color 0.3s ease;
+            z-index: 1;
         }
 
-        .btn:hover {
+        .social-btn::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
             background-color: #d3dee3;
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .social-btn:hover::before {
+            height: 100%;
+        }
+
+        .social-btn:hover {
             color: #2A6478;
-            opacity: 1;
+            transform: rotateY(360deg);
+        }
+
+        .social-btn span {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column-reverse;
+                text-align: center;
+            }
+
+            .content {
+                border-right: none;
+                padding-right: 0;
+                text-align: center;
+            }
+
+            .buttons {
+                justify-content: center;
+            }
+
+            .profile img {
+                width: 200px;
+                height: 200px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Neo Sud</h1>
-        <p>This summer, I'll be working on LLM Supportability @ <a href="https://illumio.com" target="_blank">Illumio</a>.</p>
-        <p>In the past, I've worked in DevOps @ <a href="https://crowdstrike.com" target="_blank">CrowdStrike</a>.</p>
-        <p>I've also done research with the <a href="https://braingeneers.ucsc.edu" target="_blank">Braingeneers Lab @ UCSC</a> on cell embeddings, and have published a <a href="/assets/annota-paper.pdf" target="_blank">pre-print</a> on the utilization of crowdsourcing for guiding student learning.</p>
-        <p>I'll be graduating from <a href="https://ucsc.edu" target="_blank">UC Santa Cruz</a> with a B.S in Computer Science this March.</p>
-        <p>To get in touch, you can reach me at neo [dot] sud [at] gmail [dot] com.</p>
-        <div class="buttons">
-            <a href="https://linkedin.com/in/neosud" target="_blank" class="btn">LinkedIn</a>
-            <a href="https://github.com/aneokin12" target="_blank" class="btn">GitHub</a>
-            <a href="/resume" class="btn">Resume</a>
+        <div class="content">
+            <h1>Neo Sud</h1>
+            <div class="text-content">
+                <p>This summer, I'll be working on LLM Supportability @ <a href="https://illumio.com" target="_blank" class="animated-link">Illumio</a>.</p>
+                <p>In the past, I've worked in DevOps @ <a href="https://crowdstrike.com" target="_blank" class="animated-link">CrowdStrike</a>.</p>
+                <p>I've also done research with the <a href="https://braingeneers.ucsc.edu" target="_blank" class="animated-link">Braingeneers Lab @ UCSC</a> on cell embeddings, and have published a <a href="/assets/annota-paper.pdf" target="_blank" class="animated-link">pre-print</a> on the utilization of crowdsourcing for guiding student learning.</p>
+                <p>I'll be graduating from <a href="https://ucsc.edu" target="_blank" class="animated-link">UC Santa Cruz</a> with a B.S in Computer Science this March.</p>
+                <p>To get in touch, you can reach me at neo [dot] sud [at] gmail [dot] com.</p>
+            </div>
+            <div class="buttons">
+                <a href="https://linkedin.com/in/neosud" target="_blank" class="social-btn"><span>in</span></a>
+                <a href="https://github.com/aneokin12" target="_blank" class="social-btn"><span>gh</span></a>
+                <a href="/resume" class="social-btn"><span>cv</span></a>
+            </div>
+        </div>
+        <div class="profile">
+            <img src="/assets/profile.jpeg" alt="Neo Sud">
         </div>
     </div>
 </body>
