@@ -10,25 +10,44 @@ const MODEL_ID = 'ft:gpt-4.1-nano-2025-04-14:personal:sudgpt:DAo8jl7J'; // Repla
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://aneokin.com',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
 };
+
+function handleOptions(request) {
+    // If this is a proper CORS preflight, echo back the requested headers
+    if (
+        request.headers.get('Origin') !== null &&
+        request.headers.get('Access-Control-Request-Method') !== null &&
+        request.headers.get('Access-Control-Request-Headers') !== null
+    ) {
+        return new Response(null, {
+            status: 204,
+            headers: {
+                ...CORS_HEADERS,
+                'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers'),
+            },
+        });
+    } else {
+        // Standard OPTIONS request (not CORS preflight)
+        return new Response(null, {
+            headers: { Allow: 'POST, OPTIONS' },
+        });
+    }
+}
 
 export default {
     async fetch(request, env) {
         // Handle CORS preflight
         if (request.method === 'OPTIONS') {
-            return new Response(null, {
-                status: 204,
-                headers: CORS_HEADERS
-            });
+            return handleOptions(request);
         }
 
         const jsonHeaders = {
             ...CORS_HEADERS,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Vary': 'Origin',
         };
 
         // Only accept POST
