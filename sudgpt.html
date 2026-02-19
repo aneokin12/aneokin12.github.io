@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SudGPT – Neo Sud</title>
+    <meta name="description" content="SudGPT — a personal AI assistant fine-tuned on Neo's style.">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #2A6478;
+            color: #d3dee3;
+            font-family: 'Red Hat Display', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* Drop-in animation */
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Back link */
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: #d3dee3;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            opacity: 0;
+            animation: dropIn 0.5s ease forwards;
+            transition: opacity 0.3s ease;
+        }
+
+        .back-link:hover {
+            opacity: 0.7 !important;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            animation: dropIn 0.6s ease forwards;
+            animation-delay: 0.05s;
+            opacity: 0;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            opacity: 0.75;
+            line-height: 1.6;
+        }
+
+        /* Glassy chat card */
+        .chat-card {
+            width: 100%;
+            max-width: 640px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: dropIn 0.6s ease forwards;
+            animation-delay: 0.15s;
+            opacity: 0;
+        }
+
+
+
+        /* Messages area */
+        .messages {
+            flex: 1;
+            min-height: 320px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 1.2rem 1.2rem 0.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 0.7rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            word-wrap: break-word;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, 0.14);
+            border-bottom-right-radius: 0.3rem;
+        }
+
+        .msg.assistant {
+            align-self: flex-start;
+            background: rgba(30, 74, 90, 0.6);
+            border-bottom-left-radius: 0.3rem;
+        }
+
+        .msg.typing {
+            align-self: flex-start;
+            background: rgba(30, 74, 90, 0.4);
+            border-bottom-left-radius: 0.3rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .msg.error {
+            align-self: center;
+            background: rgba(200, 80, 80, 0.25);
+            color: #f0b0b0;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* Empty state */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.35;
+            font-size: 0.95rem;
+            font-style: italic;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Input bar */
+        .input-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .input-bar input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.7rem;
+            padding: 0.65rem 1rem;
+            color: #d3dee3;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-bar input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-bar input::placeholder {
+            color: rgba(211, 222, 227, 0.35);
+        }
+
+        .input-bar button {
+            background: rgba(211, 222, 227, 0.9);
+            border: none;
+            color: #2A6478;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 0.6rem 1.3rem;
+            border-radius: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            white-space: nowrap;
+        }
+
+        .input-bar button:hover {
+            background: #ffffff;
+            transform: scale(1.04);
+        }
+
+        .input-bar button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Footer note */
+        .footer-note {
+            margin-top: 0.8rem;
+            font-size: 0.78rem;
+            opacity: 0.4;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 680px) {
+            body {
+                padding: 1rem;
+                padding-top: 3.5rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .chat-card {
+                border-radius: 1rem;
+            }
+
+            .messages {
+                min-height: 260px;
+                max-height: 360px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="back-link">← Back</a>
+
+    <div class="hero">
+        <h1>SudGPT</h1>
+        <p>A personal AI fine-tuned on Neo's vibes. Ask it anything.</p>
+    </div>
+
+    <div class="chat-card">
+        <!-- Messages -->
+        <div class="messages" id="messages">
+            <div class="empty-state" id="emptyState">Start a conversation…</div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="input-bar">
+            <input type="text" id="userInput" placeholder="Ask SudGPT a question..." autocomplete="off">
+            <button id="askBtn">Ask</button>
+        </div>
+    </div>
+
+    <p class="footer-note">Powered by GPT-4.1 nano. Costs supplied on Neo's dime, please don't drive it crazy 🙏</p>
+
+    <script src="sudgpt.js"></script>
+</body>
+
+</html>

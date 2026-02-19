@@ -227,10 +227,40 @@
                 height: 200px;
             }
         }
+
+        /* Nav link */
+        .nav-link {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            color: #d3dee3;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            opacity: 0;
+            animation: dropIn 0.5s ease forwards;
+            z-index: 10;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #d3dee3;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
     </style>
 </head>
 
 <body>
+    <a href="/sudgpt.html" class="nav-link">SudGPT</a>
     <div class="container">
         <div class="content">
             <h1>Hi, I'm Neo!</h1>
