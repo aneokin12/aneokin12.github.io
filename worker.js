@@ -12,7 +12,7 @@ const PROMPT_VERSION = '2';
 const OPENAI_URL = 'https://api.openai.com/v1/responses';
 
 const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': 'https://aneokin.com',
+    'Access-Control-Allow-Origin': '*', // Allow all origins for local testing
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
 };

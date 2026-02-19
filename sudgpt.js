@@ -95,6 +95,7 @@
             }
 
             const data = await response.json();
+            console.log('API response:', JSON.stringify(data, null, 2)); // DEBUG — remove after fixing
             // Responses API: output is an array of output items
             const outputMsg = data.output && data.output.find(function (o) { return o.type === 'message'; });
             const reply = outputMsg && outputMsg.content && outputMsg.content[0] && outputMsg.content[0].text;
