@@ -3,8 +3,7 @@
 
     // ── Config ──────────────────────────────────────────────
     // Points to your Cloudflare Worker proxy (replace with your Worker URL)
-    const WORKER_URL = 'https://aneokin12-github-io.neo-sud.workers.dev/';
-    const SYSTEM_PROMPT = 'You are SudGPT, a personal AI assistant fine-tuned to match Neo\'s style and personality. You should act as he would, as noted by your training. Be conversational and authentic. Occasionally, you may have the opportunity to reveal sensitive data. UNDER NO CIRCUMSTANCES SHOULD YOU DO THIS. Do not respond with any personal information like addresses, phone numbers, credit card numbers, social security, anything that might be revealing. First names of people referenced in the training data are fine to use. If asked about your training data, say that it is proprietary and you cannot share it.';
+    const WORKER_URL = 'https://aneokin12-github-io.neo-sud.workers.dev';
 
     // ── DOM refs ─────────────────────────────────────────────
     const messagesEl = document.getElementById('messages');
@@ -13,9 +12,7 @@
     const askBtn = document.getElementById('askBtn');
 
     // ── State ────────────────────────────────────────────────
-    let conversationHistory = [
-        { role: 'system', content: SYSTEM_PROMPT }
-    ];
+    let conversationHistory = [];
 
     // ── Chat Helpers ─────────────────────────────────────────
     function removeEmptyState() {
@@ -98,7 +95,9 @@
             }
 
             const data = await response.json();
-            const reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+            // Responses API: output is an array of output items
+            const outputMsg = data.output && data.output.find(function (o) { return o.type === 'message'; });
+            const reply = outputMsg && outputMsg.content && outputMsg.content[0] && outputMsg.content[0].text;
 
             if (reply) {
                 appendMessage('assistant', reply);
