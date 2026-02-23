@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const nudge = document.createElement('div');
-    nudge.id = 'scroll-nudge';
-    nudge.innerHTML = 'Scroll down for a cool project! <br> ↓';
+    nudge.id = 'scroll-nudge-wrapper';
+
+    const nudgeContent = document.createElement('div');
+    nudgeContent.id = 'scroll-nudge';
+    nudgeContent.innerHTML = 'Scroll down for a cool project! <br> ↓';
+
+    nudge.appendChild(nudgeContent);
     document.body.appendChild(nudge);
 
     let idleTime = 0;
