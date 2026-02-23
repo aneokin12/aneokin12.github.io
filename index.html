@@ -6,304 +6,529 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neo Sud</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
+
+    <!-- Modern Geometric Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --bg-color: #FDF5E6;
+            /* Light cream */
+            --pill-bg: #0A0A0A;
+            /* Jet black */
+            --text-main-nudge: #111111;
+            --text-main: #FFFFFF;
+            --text-muted: #A3A3A3;
+            --btn-orange: #FF6B35;
+            --btn-blue: #3B82F6;
+            --icon-bg-hover: #1A1A1A;
+            --bezier: cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        :root.dark-mode {
+            --bg-color: #111111;
+            --pill-bg: #EAEAEA;
+            --text-main-nudge: #FFFFFF;
+            --text-main: #111111;
+            --text-muted: #666666;
+            --icon-bg-hover: #D0D0D0;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: #2A6478;
-            color: #d3dee3;
-            font-family: 'Red Hat Display', sans-serif;
+            background-color: var(--bg-color);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
+            overflow: hidden;
+            flex-direction: column;
+            transition: transform 0.8s var(--bezier), opacity 0.8s ease, background-color 0.4s ease;
         }
 
-        .container {
-            max-width: 900px;
-            display: flex;
-            align-items: center;
-            gap: 3rem;
-        }
-
-        /* Drop-in animation */
-        @keyframes dropIn {
+        @keyframes dropInPill {
             from {
+                transform: translateY(-40px) scale(0.95);
                 opacity: 0;
-                transform: translateY(-30px);
             }
 
             to {
+                transform: translateY(0) scale(1);
                 opacity: 1;
-                transform: translateY(0);
             }
         }
 
-        .content {
-            text-align: left;
-            border-right: 1px solid rgba(211, 222, 227, 0.2);
-            padding-right: 3rem;
-            animation: dropIn 0.6s ease forwards;
-            animation-delay: 0.1s;
-            opacity: 0;
-        }
-
-        .profile {
-            flex-shrink: 0;
-            perspective: 1000px;
-            animation: dropIn 0.6s ease forwards;
-            opacity: 0;
-        }
-
-        .profile-card {
-            width: 250px;
-            height: 250px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s ease;
-        }
-
-        .profile:hover .profile-card {
-            transform: rotateY(180deg);
-        }
-
-        .profile-front,
-        .profile-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 50%;
-            border: 4px solid #fff;
-        }
-
-        .profile-front img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        .profile-back {
-            background-color: #1e4a5a;
-            transform: rotateY(180deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-        }
-
-        p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-
-        .text-content {
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(211, 222, 227, 0.15);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Text underline animation for links */
-        a.animated-link {
-            color: #d3dee3;
-            text-decoration: none;
-            font-weight: 700;
-            position: relative;
-            display: inline-block;
-        }
-
-        a.animated-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #d3dee3;
-            transition: width 0.3s ease;
-        }
-
-        a.animated-link:hover::after {
-            width: 100%;
-        }
-
-        /* Social media buttons */
-        .buttons {
-            display: flex;
-            justify-content: flex-start;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .social-btn {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            border: 2px solid #d3dee3;
-            border-radius: 50%;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: #d3dee3;
+        /* The Morphing Pill Container */
+        .pill-container {
+            background-color: var(--pill-bg);
+            border-radius: 9999px;
+            color: var(--text-main);
             overflow: hidden;
-            transition: color 0.3s ease, transform 0.2s ease;
-            z-index: 1;
+            position: relative;
+            transform-origin: center center;
+            /* Dimensions driven by JS inline styles for the morphing effect, but set defaults here */
+            height: 64px;
+            width: 320px;
+            transition: all 0.5s var(--bezier), background-color 0.4s ease, color 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            animation: dropInPill 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .social-btn::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0%;
-            background-color: #d3dee3;
-            transition: height 0.3s ease;
-            z-index: -1;
+        /* Dark Mode Toggle */
+        #dark-mode-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: transparent;
+            border: none;
+            color: var(--pill-bg);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: transform 0.2s, color 0.4s ease;
+            z-index: 1000;
         }
 
-        .social-btn:hover::before {
-            height: 100%;
-        }
-
-        .social-btn:hover {
-            color: #2A6478;
+        #dark-mode-toggle:hover {
             transform: scale(1.1);
         }
 
-        .social-btn svg {
+        #dark-mode-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Tooltip */
+        #dark-mode-toggle::after {
+            content: "toggle dark mode";
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--pill-bg);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s, color 0.4s ease, background-color 0.4s ease;
+            transform: translateY(-5px);
+            font-weight: 500;
+        }
+
+        #dark-mode-toggle:hover::after {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- STATE WRAPPERS --- */
+        .state-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .state-wrapper.active {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.3s ease 0.15s;
+            /* slight delay on fade in to let container size adjust */
+        }
+
+        /* --- HOME STATE --- */
+        .state-wrapper.home {
+            justify-content: space-between;
+            padding: 0 12px;
+        }
+
+        .home-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .home-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .home-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .home-text .greeting {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .home-text .name {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .home-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .circle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFF;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .circle-btn:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .btn-about {
+            background-color: var(--btn-orange);
+        }
+
+        .btn-links {
+            background-color: var(--btn-blue);
+        }
+
+        .circle-btn svg {
             width: 20px;
             height: 20px;
             fill: currentColor;
-            position: relative;
-            z-index: 2;
         }
 
-        .social-btn span {
-            position: relative;
-            z-index: 2;
+        /* --- ABOUT STATE --- */
+        .state-wrapper.about {
+            flex-direction: column;
+            padding: 40px 48px;
+            justify-content: center;
+            align-items: flex-start;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column-reverse;
-                text-align: center;
-            }
-
-            .content {
-                border-right: none;
-                padding-right: 0;
-                text-align: center;
-            }
-
-            .buttons {
-                justify-content: center;
-            }
-
-            .profile-card {
-                width: 200px;
-                height: 200px;
-            }
-        }
-
-        /* Nav link */
-        .nav-link {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            color: #d3dee3;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.95rem;
-            opacity: 0;
-            animation: dropIn 0.5s ease forwards;
-            z-index: 10;
-        }
-
-        .nav-link::after {
-            content: '';
+        .about-header {
             position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #d3dee3;
-            transition: width 0.3s ease;
+            top: 24px;
+            left: 24px;
         }
 
-        .nav-link:hover::after {
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            margin-left: -8px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-main);
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .about-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
             width: 100%;
+            margin-left: 1.25rem;
+        }
+
+        .about-content p {
+            margin-bottom: 1rem;
+        }
+
+        .about-content strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .about-content a {
+            color: var(--text-main);
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .about-content a:hover {
+            opacity: 0.8;
+            color: orange;
+        }
+
+        .credit-text {
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* --- LINKS STATE (TOUCHBAR) --- */
+        .state-wrapper.links {
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 0 0px;
+        }
+
+        .links .back-btn {
+            margin-right: 24px;
+            margin-left: 0;
+        }
+
+        .touch-link {
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .touch-link:hover {
+            background: var(--icon-bg-hover);
+            color: var(--text-main);
+        }
+
+        .touch-link svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* Scroll Nudge Wrapper */
+        #scroll-nudge-wrapper {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #scroll-nudge-wrapper.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Scroll Nudge Content */
+        #scroll-nudge {
+            color: var(--text-main-nudge);
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            animation: bounceNudgeBot 2s infinite ease-in-out;
+            animation-delay: 0.8s;
+            transition: color 0.4s ease;
+        }
+
+        @keyframes bounceNudgeBot {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(10px);
+            }
         }
     </style>
 </head>
 
 <body>
-    <a href="/sudgpt.html" class="nav-link">SudGPT</a>
-    <div class="container">
-        <div class="content">
-            <h1>Hi, I'm Neo!</h1>
-            <div class="text-content">
-                <p>Welcome to my personal website!</p>
-                <p>In the past, I've worked on ML Infra @ <a href="https://crowdstrike.com" target="_blank"
-                        class="animated-link">CrowdStrike</a>.</p>
-                <p>I've also done research with the <a href="https://braingeneers.ucsc.edu" target="_blank"
-                        class="animated-link">Braingeneers Lab</a> on cell embeddings, and was an NSF-funded fellow at
-                    the <a href="https://tech4good.soe.ucsc.edu/" target="_blank" class="animated-link">Tech4Good
-                        Lab</a>.</p>
-                <p>I'll be graduating from <a href="https://ucsc.edu" target="_blank" class="animated-link">UC Santa
-                        Cruz</a> with a B.S in Computer Science this March.</p>
-                <p>To get in touch, you can reach me at <a href="mailto:neo.sud@gmail.com" target="_blank"
-                        class="animated-link">neo.sud@gmail.com</a></p>
+    <script>
+        // Apply dark mode immediately to prevent FOUC
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <!-- Dark Mode Toggle -->
+    <button id="dark-mode-toggle" aria-label="Toggle dark mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mask"
+            viewBox="0 0 16 16">
+            <path
+                d="M6.225 1.227A7.5 7.5 0 0 1 10.5 8a7.5 7.5 0 0 1-4.275 6.773 7 7 0 1 0 0-13.546M4.187.966a8 8 0 1 1 7.627 14.069A8 8 0 0 1 4.186.964z" />
+        </svg>
+    </button>
+
+    <div class="pill-container" id="pill">
+
+        <!-- HOME STATE -->
+        <div class="state-wrapper home active" id="state-home">
+            <div class="home-left">
+                <img src="/assets/hawaii.jpeg" alt="Neo" class="home-avatar">
+                <div class="home-text">
+                    <span class="greeting">Hello, I'm</span>
+                    <span class="name">Neo</span>
+                </div>
             </div>
-            <div class="buttons">
-                <a href="https://linkedin.com/in/neosud" target="_blank" class="social-btn" aria-label="LinkedIn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <div class="home-buttons">
+                <button class="circle-btn btn-about" id="btn-about" aria-label="About">
+                    <svg viewBox="0 0 24 24">
                         <path
-                            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                     </svg>
-                </a>
-                <a href="https://github.com/aneokin12" target="_blank" class="social-btn" aria-label="GitHub">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path
-                            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                </button>
+                <button class="circle-btn btn-links" id="btn-links" aria-label="Links">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="6" cy="12" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="18" cy="12" r="2" />
                     </svg>
-                </a>
-                <a href="/assets/resume.pdf" class="social-btn" aria-label="Resume"><span>cv</span></a>
+                </button>
             </div>
         </div>
-        <div class="profile">
-            <div class="profile-card">
-                <div class="profile-front">
-                    <img src="/assets/hawaii.jpeg" alt="Neo Sud">
-                </div>
-                <div class="profile-back">
-                    📍: Kamuela, HI
-                </div>
+
+        <!-- ABOUT STATE -->
+        <div class="state-wrapper about" id="state-about">
+            <div class="about-header">
+                <button class="back-btn" onclick="setState('home')" aria-label="Back">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                    </svg>
+                </button>
             </div>
+            <div class="about-content">
+                <p>Computer Science B.S. @ <a href="https://www.ucsc.edu" target="_blank">UCSC</a>.</p>
+                <p>Previously ML Infra @ <a href="https://www.crowdstrike.com" target="_blank">CrowdStrike</a>, building
+                    systems at scale.</p>
+                <p>Interested in the intersection of AI, infrastructure, and immersive user experiences.</p>
+                <p class="credit-text">Credit to <a href="https://kons.fyi/?ref=godly" target="_blank">kons.fyi</a> for
+                    the design.</p>
+            </div>
+        </div>
+
+        <!-- LINKS STATE -->
+        <div class="state-wrapper links" id="state-links">
+            <button class="back-btn" onclick="setState('home')" aria-label="Back">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                </svg>
+            </button>
+            <a href="https://linkedin.com/in/neosud" target="_blank" class="touch-link" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                </svg>
+            </a>
+            <a href="/assets/resume.pdf" class="touch-link" aria-label="Resume">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                </svg>
+            </a>
+            <a href="https://github.com/aneokin12" target="_blank" class="touch-link" aria-label="GitHub">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                </svg>
+            </a>
+            <a href="https://open.spotify.com/user/31t746z2gcesl5cpudmlv7o3k2ni" target="_blank" class="touch-link"
+                aria-label="Spotify">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-spotify"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m3.669 11.538a.5.5 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686m.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858m.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288" />
+                </svg>
+            </a>
+            <a href="mailto:neo.sud@gmail.com" class="touch-link" aria-label="Email">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-mailbox2" viewBox="0 0 16 16">
+                    <path d="M9 8.5h2.793l.853.854A.5.5 0 0 0 13 9.5h1a.5.5 0 0 0 .5-.5V8a.5.5 0 0 0-.5-.5H9z" />
+                    <path
+                        d="M12 3H4a4 4 0 0 0-4 4v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7a4 4 0 0 0-4-4M8 7a4 4 0 0 0-1.354-3H12a3 3 0 0 1 3 3v6H8zm-3.415.157C4.42 7.087 4.218 7 4 7s-.42.086-.585.157C3.164 7.264 3 7.334 3 7a1 1 0 0 1 2 0c0 .334-.164.264-.415.157" />
+                </svg>
+            </a>
         </div>
     </div>
+
+    <!-- Scroll Nudge Logic -->
+    <script src="/assets/scripts/index-scroll.js"></script>
+
+    <!-- Morphing Pill Logic -->
+    <script>
+        // Dark Mode Logic
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        darkModeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        const pill = document.getElementById('pill');
+        const states = {
+            'home': { width: 320, height: 64, radius: 9999 },
+            'about': { width: 440, height: 320, radius: 40 },
+            'links': { width: 400, height: 64, radius: 9999 }
+        };
+
+        // Initialize inline styles for smooth CSS transitions
+        pill.style.width = '320px';
+        pill.style.height = '64px';
+        pill.style.borderRadius = '9999px';
+
+        document.getElementById('btn-about').addEventListener('click', () => setState('about'));
+        document.getElementById('btn-links').addEventListener('click', () => setState('links'));
+
+        window.setState = function (stateName) {
+            // Update container dimensions
+            const stateDims = states[stateName];
+            pill.style.width = `${stateDims.width}px`;
+            pill.style.height = `${stateDims.height}px`;
+            pill.style.borderRadius = `${stateDims.radius}px`;
+
+            // Toggle active classes on wrappers
+            document.querySelectorAll('.state-wrapper').forEach(wrapper => {
+                if (wrapper.id === `state-${stateName}`) {
+                    wrapper.classList.add('active');
+                } else {
+                    wrapper.classList.remove('active');
+                }
+            });
+        };
+    </script>
 </body>
 
 </html>
