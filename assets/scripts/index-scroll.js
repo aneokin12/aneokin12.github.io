@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.opacity = '0';
 
         setTimeout(() => {
-            window.location.href = '/sudgpt.html?transition=scroll';
+            window.location.href = 'https://sudgpt.vercel.app';
         }, 700);
     }
 
