@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en" data-view="aerial">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Neo Sud, software engineer in the Bay Area. A career told as one move up the pitch: eight players, eight kits, one goal.">
+<title>Neo Sud</title>
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+
+<!-- All three families are SIL Open Font License. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:ital,wdth,wght@0,50..150,400..900;1,50..150,400..900&family=Instrument+Sans:wght@400;500;600&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- three.js is MIT licensed. Pinned; matchday.js is the only file that uses it. -->
+<script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+</script>
+
+<style>
+  :root {
+    --board: #060a14;
+    --chalk: #edf2fb;
+    --muted: #93a1bb;
+    --hot: #ffd23f;
+    --hot-ink: #1b1500;
+    --paper: #0e1422;
+    --ink: #eef2fa;
+    --ink-soft: #9aa7c0;
+    --rule: rgb(238 242 250 / .15);
+    --glass: rgb(6 10 20 / .6);            /* chips and captions laid over the stadium */
+    --glass-line: rgb(255 255 255 / .22);
+    --card: rgb(14 20 34 / .93);
+    --bar: rgb(0 0 0 / .6);
+    --pip: rgb(255 255 255 / .1);
+    --hot-text: var(--hot);                /* the accent when it is used for lettering */
+    --halo: 0 2px 18px rgb(0 0 0 / .5);
+    --display: Anybody, "Arial Narrow", system-ui, sans-serif;
+    --body: "Instrument Sans", system-ui, sans-serif;
+    --mono: "Martian Mono", ui-monospace, Menlo, monospace;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+
+  /* Daylight: dark lettering over a bright sky, pale panels. */
+  :root[data-theme="day"] {
+    --board: #cfe0ee; --chalk: #0c1730; --muted: #33435f; --paper: #f7f9fc; --ink: #0e1626; --ink-soft: #4d5c77;
+    --rule: rgb(14 22 38 / .16); --glass: rgb(250 252 255 / .78); --glass-line: rgb(12 23 48 / .28); --card: rgb(250 251 253 / .95);
+    --bar: rgb(246 248 252 / .86); --pip: rgb(14 22 38 / .09); --hot-text: #8a5f00; --halo: 0 1px 14px rgb(255 255 255 / .75);
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--board); color: var(--chalk); font: 15px/1.5 var(--body); height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  body.flat { background: radial-gradient(120% 80% at 30% 20%, #12306e, var(--board) 70%); }
+  button, a { font: inherit; color: inherit; }
+  kbd { font: 400 10.5px/1 var(--mono); }
+  :focus-visible { outline: 2px solid var(--hot); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+
+  /* The stadium fills the window; the page's own UI sits on top of it. */
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 1; }
+  .flash.go { animation: flash .5s ease-out; }
+  @keyframes flash { from { opacity: .55; } to { opacity: 0; } }
+  .top, .match { position: relative; z-index: 2; }
+  .top { transition: opacity .5s; }
+  [data-view="aerial"] .top .tools > :not(#btn-theme, #btn-menu, #btn-sound) { opacity: 0; pointer-events: none; }
+  .top .tools > * { transition: opacity .5s; }
+
+  /* --- Header --- */
+  :root[data-theme="day"] :is(.tagline, .socials, .intro-ui p, .side-door) { text-shadow: 0 0 6px #fff, 0 0 14px rgb(255 255 255 / .9); }
+  .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 28px 12px; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .wordmark { font: 900 clamp(24px, 3.2vw, 40px)/1 var(--display); font-stretch: 150%; text-transform: uppercase; letter-spacing: -.01em; text-shadow: var(--halo); }
+  .tagline { font: 400 11.5px/1.5 var(--mono); color: var(--muted); margin-top: 6px; }
+  .socials { display: flex; gap: 14px; margin-top: 8px; font: 400 11.5px/1 var(--mono); }
+  .socials a { color: var(--chalk); text-decoration-color: var(--glass-line); text-underline-offset: 3px; }
+  .socials a:hover { color: var(--hot-text); }
+  .tools { display: flex; gap: 8px; transition: opacity .5s; }
+  .chip { white-space: nowrap; text-decoration: none; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 99px; padding: 7px 12px; cursor: pointer; font: 500 13px/1 var(--body); display: flex; gap: 8px; align-items: center; transition: border-color .15s, background-color .15s; }
+  .chip:hover { border-color: var(--chalk); }
+  .chip[aria-pressed="true"] { background: var(--hot); color: var(--hot-ink); border-color: var(--hot); }
+  .chip kbd { opacity: .65; }
+
+  /* --- Layout: the player stands on the left, the commentary panel sits on the right --- */
+  .match { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 24px; padding: 0 28px 16px; min-height: 0; pointer-events: none; }
+  .match > * { pointer-events: auto; }
+
+  /* --- Commentary panel --- */
+  .card { grid-column: 2; align-self: start; max-height: 100%; background: var(--card); color: var(--ink); border: 1px solid var(--rule); border-radius: 14px; padding: 22px 24px 18px; overflow: auto; display: flex; flex-direction: column; gap: 14px; transition: opacity .3s, transform .45s var(--ease); }
+  body:not(.open) .card { opacity: 0; transform: translateX(28px); pointer-events: none; }
+  .card-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
+  .shirtno { width: 66px; height: 78px; border-radius: 10px 10px 16px 16px; background: linear-gradient(170deg, var(--c1), var(--c2)); color: var(--ci); display: grid; place-items: center; font: 900 44px/1 var(--display); font-stretch: 80%; box-shadow: inset 0 5px 0 var(--ci); }
+  .tag { display: inline-block; font: 600 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; padding: 6px 8px; border-radius: 4px; background: var(--hot); color: var(--hot-ink); margin-bottom: 10px; }
+  .tag.loan { background: none; color: var(--hot-text); box-shadow: inset 0 0 0 1px var(--hot-text); }
+  .card h2 { font: 800 28px/1 var(--display); font-stretch: 105%; letter-spacing: -.01em; text-wrap: balance; }
+  .role { font-weight: 600; margin-top: 6px; }
+  .meta { font: 400 11.5px/1.6 var(--mono); color: var(--ink-soft); }
+  .call { border-left: 3px solid var(--hot); padding: 2px 0 2px 14px; }
+  .mic { display: block; font: 600 9.5px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--hot-text); margin-bottom: 8px; }
+  .call p { font: italic 500 17px/1.45 var(--display); font-stretch: 92%; min-height: 4.35em; }
+  .call p::after { content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--hot); opacity: 0; }
+  .call.typing p::after { opacity: 1; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .stats { display: flex; gap: 22px; }
+  .stats div { display: grid; gap: 4px; }
+  .stats dt { font: 800 24px/1 var(--display); font-stretch: 90%; }
+  .stats dd { margin: 0; font: 400 9.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+  .card ul { padding-left: 18px; display: grid; gap: 7px; font-size: 14.5px; }
+  .card li::marker { color: var(--hot-text); }
+  .card li b { font-weight: 600; }
+  .tags { font: 400 11.5px/1.7 var(--mono); color: var(--ink-soft); }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .links a { text-decoration: none; border: 1.5px solid var(--rule); border-radius: 8px; padding: 7px 11px; font-weight: 600; font-size: 13.5px; transition: border-color .15s; }
+  .links a:hover { border-color: var(--ink); }
+  .card-nav { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rule); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: center; }
+  .pips { grid-column: 1 / -1; display: flex; gap: 6px; padding: 0; list-style: none; }
+  .pips button { width: 100%; height: 22px; border: 0; border-radius: 4px; background: var(--pip); color: var(--ink-soft); cursor: pointer; font: 600 10.5px/1 var(--mono); }
+  .pips li { flex: 1; }
+  .pips .done button { background: rgb(255 210 63 / .28); color: var(--ink); }
+  .pips .here button { background: var(--hot); color: var(--hot-ink); }
+  .back { background: none; border: 1.5px solid var(--rule); border-radius: 8px; padding: 11px 13px; cursor: pointer; font: 400 11.5px/1 var(--mono); color: var(--ink-soft); }
+  .back:hover { color: var(--ink); border-color: var(--ink); }
+  .back:disabled { opacity: .35; cursor: default; }
+  .next { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 0; border-radius: 8px; padding: 11px 14px; background: var(--hot); color: var(--hot-ink); cursor: pointer; font: 700 15px/1.1 var(--display); font-stretch: 105%; text-transform: uppercase; letter-spacing: .01em; text-align: left; transition: transform .15s var(--ease); }
+  .next:hover { transform: translateY(-1px); }
+  .card.swap > * { animation: cardin .3s var(--ease) both; }
+  @keyframes cardin { from { opacity: 0; transform: translateY(6px); } }
+
+  /* --- Live caption while the ball is moving --- */
+  .quick, .card .close { display: none; }
+  .caption { position: fixed; left: 50%; bottom: 30px; z-index: 2; translate: -50% 0; max-width: calc(100vw - 32px); padding: 10px 18px; border-radius: 8px; background: var(--glass); border-left: 3px solid var(--hot); font: italic 600 clamp(15px, 2vw, 20px)/1.25 var(--display); font-stretch: 95%; text-align: center; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  body.live .caption { opacity: 1; }
+
+  /* --- Status line --- */
+
+  /* --- Aerial view: only the way in is on screen --- */
+  .intro-ui { position: fixed; left: 28px; bottom: 30px; z-index: 3; display: grid; gap: 14px; justify-items: start; transition: opacity .3s; }
+  :root:not([data-view="aerial"]) .intro-ui { opacity: 0; pointer-events: none; }
+  .intro-ui p { font: 400 11.5px/1.6 var(--mono); color: var(--muted); max-width: 44ch; }
+  .enter { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border: 0; border-radius: 10px; background: var(--hot); color: var(--hot-ink); font: 700 17px/1 var(--display); font-stretch: 110%; text-transform: uppercase; letter-spacing: .02em; cursor: pointer; transition: transform .15s var(--ease), opacity .2s; }
+  .enter:hover { transform: translateY(-2px); }
+  .enter:disabled { opacity: .5; cursor: progress; }
+  .enter:focus-visible { outline-color: #fff; }
+  .side-door { font: 400 11.5px/1 var(--mono); color: var(--chalk); text-underline-offset: 3px; }
+  .side-door:hover { color: var(--hot-text); }
+
+  /* --- Keys dialog --- */
+  dialog { margin: auto; border: 0; border-radius: 14px; background: var(--paper); color: var(--ink); padding: 26px 28px; width: min(520px, calc(100vw - 32px)); }
+  dialog:focus-visible { outline: none; }
+  dialog::backdrop { background: rgb(0 0 0 / .55); }
+  dialog h2 { font: 800 24px/1 var(--display); font-stretch: 110%; margin-bottom: 16px; }
+  dialog dl { display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; align-items: baseline; }
+  dialog dt { font: 600 12px/1.4 var(--mono); white-space: nowrap; }
+  dialog dd { font-size: 14px; color: var(--ink-soft); }
+  dialog p { margin-top: 18px; font: 400 11.5px/1.6 var(--mono); color: var(--ink-soft); }
+
+  /* --- Small screens: the player takes the top of the screen, commentary slides up as a sheet --- */
+  @media (max-width: 899px) {
+    .top { padding: 14px 16px 10px; }
+    .chip kbd, .next kbd, .back kbd { display: none; }
+    .tools .chip:not(#btn-menu) { display: none; }      /* one button on a phone: the menu holds the rest */
+    .chip { padding: 9px 14px; font-size: 13px; }
+    .socials { flex-wrap: wrap; gap: 8px 12px; }
+    [data-view="match"] :is(.tagline, .socials) { display: none; }
+    .match { display: block; padding: 0; }
+    /* The pitch keeps the screen: two buttons in the corner, and the write-up opens full screen only when asked for. */
+    .card { position: fixed; inset: 0; z-index: 10; height: 100dvh; max-height: none; border-radius: 0; border: 0; padding: calc(18px + env(safe-area-inset-top)) 18px 0; gap: 12px; }
+    body:not(.open.read) .card { transform: translateY(100%); opacity: 0; pointer-events: none; }
+    .card .close { display: block; position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 10px; width: 44px; height: 44px; border: 0; background: none; color: var(--ink); font-size: 28px; line-height: 1; cursor: pointer; }
+    .card-head { padding-right: 40px; }
+    .quick { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; position: fixed; z-index: 5; right: calc(14px + env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); max-width: calc(100vw - 28px); transition: opacity .25s, translate .3s var(--ease); }
+    body:not(.open) .quick, body.read .quick { opacity: 0; translate: 0 12px; pointer-events: none; }
+    .quick button { border: 0; border-radius: 99px; background: var(--hot); color: var(--hot-ink); cursor: pointer; box-shadow: 0 8px 24px rgb(0 0 0 / .4); font: 700 14px/1.1 var(--display); font-stretch: 105%; text-transform: uppercase; letter-spacing: .01em; padding: 13px 18px; text-align: right; }
+    .quick .q-read { font-size: 12px; padding: 10px 15px; }
+    .shirtno { width: 52px; height: 62px; font-size: 34px; }
+    .card h2 { font-size: 23px; }
+    .call p { font-size: 15px; min-height: 0; }
+    .card-nav { position: sticky; bottom: 0; margin: auto -18px 0; padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); background: var(--card); }   /* the next pass stays in reach while the notes scroll */
+    .pips button { height: 28px; }
+    .caption { bottom: 24px; }
+    .intro-ui { left: 16px; right: 16px; bottom: 22px; }
+    :root:not([data-theme="day"]) .intro-ui p { text-shadow: 0 0 3px #000, 0 1px 10px #000, 0 0 18px #000; }   /* legible over the city lights */
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="flash" id="flash"></div>
+
+<header class="top">
+  <div>
+    <h1 class="wordmark">Neo Sud</h1>
+    <p class="tagline">software engineer · Bay Area · matchday</p>
+    <nav class="socials" aria-label="Links">
+      <a href="https://github.com/aneokin12" target="_blank" rel="noopener">github</a>
+      <a href="https://linkedin.com/in/neosud" target="_blank" rel="noopener">linkedin</a>
+      <a href="/assets/resume.pdf">résumé</a>
+      <a href="https://open.spotify.com/user/31t746z2gcesl5cpudmlv7o3k2ni" target="_blank" rel="noopener">spotify</a>
+      <a href="mailto:neo.sud@gmail.com">email</a>
+    </nav>
+  </div>
+  <div class="tools">
+    <button class="chip" id="btn-sound" aria-pressed="true">Crowd <kbd>s</kbd></button>
+    <button class="chip" id="btn-theme">Daylight <kbd>t</kbd></button>
+    <button class="chip" id="btn-voice" aria-pressed="false">Read it aloud <kbd>m</kbd></button>
+    <a class="chip" href="/" id="btn-kits">Kit room</a>
+    <button class="chip" id="btn-aerial">Leave the ground <kbd>esc</kbd></button>
+    <button class="chip" id="btn-menu" data-toolbar>Menu <kbd>ctrl space</kbd></button>
+  </div>
+</header>
+
+<main class="match">
+  <aside class="card" id="card" aria-live="polite"></aside>
+</main>
+
+<div class="quick" id="quick">
+  <button class="q-read" id="q-read">Read description</button>
+  <button class="q-next" id="q-next"></button>
+</div>
+
+<p class="caption" id="caption" aria-live="polite"></p>
+
+
+<div class="intro-ui">
+  <p>Eight players, eight kits, one move from the keeper's hands to the back of the net. Each touch is a stop in my career.</p>
+  <button class="enter" id="enter" disabled>Opening the gates</button>
+  <a class="side-door" href="/">or go round to the kit room →</a>
+</div>
+
+<dialog id="keys" aria-labelledby="keys-title">
+  <h2 id="keys-title">Keys</h2>
+  <dl>
+    <dt>l / j / → / space</dt><dd>Play the ball to the next player. Press again to skip to the freeze frame.</dd>
+    <dt>h / k / ←</dt><dd>Go back to the previous player</dd>
+    <dt>1 – 8</dt><dd>Jump straight to a shirt number</dd>
+    <dt>gg / G</dt><dd>Back to the keeper, or on to the final whistle</dd>
+    <dt>r</dt><dd>Replay the last pass</dd>
+    <dt>m</dt><dd>Have the commentary read aloud</dd>
+    <dt>t</dt><dd>Switch between daylight and floodlights</dd>
+    <dt>s</dt><dd>Turn the crowd noise on or off</dd>
+    <dt>ctrl + space</dt><dd>Open the toolbar: every action, player and link in one place. Type to narrow it down.</dd>
+    <dt>esc</dt><dd>Close whatever is open, then leave the ground</dd>
+  </dl>
+  <p>Set in Anybody, Instrument Sans, and Martian Mono. The stadium is three.js.</p>
+</dialog>
+
+<noscript>
+  <p style="position:relative;padding:28px">Neo Sud, software engineer. <a href="mailto:neo.sud@gmail.com">neo.sud@gmail.com</a> · <a href="https://github.com/aneokin12">GitHub</a> · <a href="https://linkedin.com/in/neosud">LinkedIn</a> · <a href="/assets/resume.pdf">Résumé</a></p>
+</noscript>
+
+<script type="module">
+// One player per stop in the career, in shirt-number order, which is also the order the ball travels.
+// `call` is the commentary on the freeze frame; `live` is the line while the ball is on its way to them.
+// kit.c is [base colour, pattern colour, print colour].
+const { squad, fullTime } = await import('/assets/js/kits.js');
+const { createToolbar, rotateHint } = await import('/assets/js/toolbar.js');
+rotateHint();
+const { createCrowd } = await import('/assets/js/crowd.js');
+const N = squad.length;
+const stops = [...squad, fullTime];
+const POS = { GK: 'Goalkeeper', LB: 'Left-back', CB: 'Centre-back', RB: 'Right-back', CM: 'Midfield', LF: 'Left forward', RF: 'Right forward', ST: 'Striker', FT: 'Final whistle' };
+
+const $ = id => document.getElementById(id);
+const root = document.documentElement, card = $('card');
+const keys = $('keys'), enterBtn = $('enter'), caption = $('caption'), flash = $('flash');
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const narrow = matchMedia('(max-width: 899px)');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+let at = 0;            // which stop has the ball: 0–6 are players, 7 is full time
+let busy = false;      // the ball is moving
+let scene = null, voice = false, typer = 0, pending = '';
+
+// How far the camera slides the player out from under the panel, in pixels.
+const panel = () => narrow.matches ? { x: 0, y: 0 } : { x: 215, y: -10 };      // phones keep the whole screen for the pitch
+
+function nextLabel(i) {
+  if (i === N) return 'Watch it again';
+  if (i === N - 1) return 'Hit it on the volley';
+  return `${i ? 'Play it' : 'Throw it'} to ${stops[i + 1].n} · ${stops[i + 1].title}`;
+}
+function renderCard(i) {
+  const p = stops[i];
+  card.innerHTML = `
+    <button class="close" data-close aria-label="Close the description">×</button>
+    <header class="card-head">
+      <div class="shirtno" style="--c1:${p.kit.c[0]};--c2:${p.kit.fade || p.kit.c[0]};--ci:${p.kit.c[2]}">${p.n}</div>
+      <div>
+        <span class="tag ${p.spell === 'Loan spell' ? 'loan' : ''}">${POS[p.pos]} · ${esc(p.spell)}</span>
+        <h2>${esc(p.title)}</h2>
+        <p class="role">${esc(p.role)}</p>
+        ${p.meta ? `<p class="meta">${esc(p.meta)}</p>` : ''}
+      </div>
+    </header>
+    <blockquote class="call" id="call"><span class="mic">Commentary</span><span class="sr">${esc(p.call)}</span><p id="call-text" aria-hidden="true"></p></blockquote>
+    ${p.stats ? `<dl class="stats">${p.stats.map(([v, l]) => `<div><dt>${esc(v)}</dt><dd>${esc(l)}</dd></div>`).join('')}</dl>` : ''}
+    ${p.pts ? `<ul>${p.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+    ${p.honours ? `<ul>${p.honours.map(([t, d]) => `<li><b>${esc(t)}.</b> ${esc(d)}</li>`).join('')}</ul>` : ''}
+    ${p.tags ? `<p class="tags">${esc(p.tags)}</p>` : ''}
+    <div class="links">${[...p.links, p.id ? ['Shirt in the kit room', '/#' + p.id] : ['Down the tunnel to the kit room', '/#vouch']].map(([l, h]) => `<a href="${esc(h)}" ${h.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>${esc(l)}</a>`).join('')}</div>
+    <footer class="card-nav">
+      <ol class="pips" aria-label="Shirt numbers">${squad.map((q, k) => `<li class="${k < i ? 'done' : k === i ? 'here' : ''}"><button data-jump="${k}" aria-label="${q.n}, ${esc(q.title)}">${q.n}</button></li>`).join('')}</ol>
+      <button class="back" data-go="-1" ${i ? '' : 'disabled'}>‹ <kbd>h</kbd></button>
+      <button class="next" data-go="1"><span>${esc(nextLabel(i))}</span><kbd>l</kbd></button>
+    </footer>`;
+  card.scrollTop = 0;
+  card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
+  type(p.call);
+}
+// The commentary is typed out, like a caption keeping up with the voice.
+function type(text) {
+  clearInterval(typer);
+  const out = $('call-text'), box = $('call');
+  if (calm) { out.textContent = text; return; }
+  let n = 0; out.textContent = ''; box.classList.add('typing');
+  typer = setInterval(() => { n += 2; out.textContent = text.slice(0, n); if (n >= text.length) { clearInterval(typer); box.classList.remove('typing'); } }, 22);
+}
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  if (!voice || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.08; u.pitch = 1.05;
+  const v = speechSynthesis.getVoices().find(v => /en-GB/i.test(v.lang));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
+const say = (text, bad = false) => toolbar.toast(text, bad);
+
+// The frame freezes on whoever has the ball and the commentary comes up.
+function freeze(i, { quiet = false } = {}) {
+  at = i; busy = false; crowd.set(i === N ? 'full-time' : 'freeze');
+  document.body.classList.remove('live');
+  if (!quiet && !calm) { flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); }
+  renderCard(i); $('q-next').textContent = nextLabel(i);
+  document.body.classList.add('open');
+  history.replaceState(null, '', '#' + (i === N ? 'full-time' : stops[i].n));
+  speak(stops[i].call);
+  scene?.layout();
+}
+async function playTo(i) {              // animate the pass from i - 1 to i
+  busy = true; speak(''); crowd.set('live');
+  document.body.classList.remove('open', 'read'); document.body.classList.add('live');
+  caption.textContent = stops[i].live;
+  await scene.play(i - 1);
+  freeze(i);
+}
+function next() {
+  if (root.dataset.view === 'aerial') return enter();
+  if (busy) return scene.skip();
+  if (at === N) return playTo(N);
+  playTo(at + 1);
+}
+function jump(i) {
+  if (root.dataset.view === 'aerial' || busy) return;
+  i = Math.max(0, Math.min(N, i));
+  scene.cut(i); freeze(i, { quiet: true });
+}
+function replay() { if (!busy && at > 0 && root.dataset.view === 'match') playTo(at); }
+
+async function enter() {
+  if (root.dataset.view !== 'aerial' || busy || !scene) return;
+  root.dataset.view = 'match'; busy = true; enterBtn.blur(); crowd.set('live');
+  await scene.enter();
+  freeze(0);
+}
+async function leave() {
+  if (root.dataset.view !== 'match' || busy) return;
+  speak(''); busy = true; crowd.set('aerial');
+  document.body.classList.remove('open', 'live', 'read');
+  root.dataset.view = 'aerial';
+  history.replaceState(null, '', location.pathname);
+  await scene.aerial();
+  busy = false; enterBtn.focus({ preventScroll: true });
+}
+
+// --- Toolbar: everything the keys can do, in one panel (ctrl + space) ---
+const go = url => { url.startsWith('http') ? open(url, '_blank', 'noopener') : (location.href = url); };
+const LINKS = [['Résumé', '/assets/resume.pdf'], ['GitHub', 'https://github.com/aneokin12'], ['LinkedIn', 'https://linkedin.com/in/neosud'], ['Spotify', 'https://open.spotify.com/user/31t746z2gcesl5cpudmlv7o3k2ni'], ['Email', 'mailto:neo.sud@gmail.com']];
+const toolbar = createToolbar({
+  placeholder: 'Find a player, a club or an action',
+  actions() {
+    const aerial = root.dataset.view === 'aerial', day = root.dataset.theme === 'day', out = [];
+    const add = (group, label, keys, run, find) => out.push({ group, label, keys, run, find });
+    if (aerial) add('Match', 'Enter the stadium', 'enter', enter);
+    else {
+      add('Match', at === N ? 'Watch it again' : 'Next touch', 'l', next); add('Match', 'Back', 'h', () => jump(at - 1)); add('Match', 'Replay', 'r', replay);
+      add('Match', 'Back to the keeper', 'gg', () => jump(0)); add('Match', 'Full time', 'G', () => jump(N));
+      squad.forEach((p, i) => add('Squad', `${p.n} · ${p.title}`, String(p.n), () => jump(i), `${p.pos} ${p.role} ${p.spell}`));
+    }
+    add('View', day ? 'Floodlights' : 'Daylight', 't', toggleTheme, 'theme light dark night day');
+    add('View', hush ? 'Turn the crowd on' : 'Turn the crowd off', 's', toggleSound, 'sound audio noise mute volume');
+    if (!aerial && 'speechSynthesis' in window) add('View', voice ? 'Stop reading aloud' : 'Read it aloud', 'm', toggleVoice, 'voice commentary');
+    add('View', 'Kit room', '', () => go('/')); if (!aerial) add('View', 'Leave the ground', 'esc', leave, 'aerial');
+    add('View', 'Keys', '?', () => keys.showModal(), 'help shortcuts');
+    LINKS.forEach(([label, url]) => add('Links', label, '', () => go(url)));
+    return out;
+  },
+});
+$('btn-menu').onclick = () => toolbar.toggle();
+
+// --- Keys ---
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || keys.open || toolbar.isOpen) return;
+  const k = e.key;
+  if (root.dataset.view === 'aerial') { if (k === 'Enter' || k === ' ' || k === 'l') { e.preventDefault(); enter(); } else if (k === 't') toggleTheme(); else if (k === 's') toggleSound(); else if (k === ':' || k === '/') { e.preventDefault(); toolbar.open(); } return; }
+  if (k === 'g') { if (pending === 'g') { pending = ''; jump(0); } else pending = 'g'; return; }
+  pending = '';
+  if (['l', 'j', 'ArrowRight', 'ArrowDown', ' ', 'Enter'].includes(k)) { if (k === 'Enter' && e.target.closest('a, button')) return; e.preventDefault(); next(); }
+  else if (['h', 'k', 'ArrowLeft', 'ArrowUp'].includes(k)) { e.preventDefault(); jump(at - 1); }
+  else if (/^[1-8]$/.test(k)) jump(+k - 1);
+  else if (k === 'G') jump(N);
+  else if (k === 'r') replay();
+  else if (k === 'm') toggleVoice();
+  else if (k === 't') toggleTheme();
+  else if (k === 's') toggleSound();
+  else if (k === ':' || k === '/') { e.preventDefault(); toolbar.open(); }
+  else if (k === '?') keys.showModal();
+  else if (k === 'Escape') leave();
+});
+$('q-next').onclick = next;
+$('q-read').onclick = () => { document.body.classList.add('read'); card.scrollTop = 0; };
+card.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) return document.body.classList.remove('read');
+  const b = e.target.closest('[data-go], [data-jump]');
+  if (!b) return;
+  if (b.dataset.jump) jump(+b.dataset.jump); else if (b.dataset.go === '1') next(); else jump(at - 1);
+});
+function toggleVoice() { voice = !voice; $('btn-voice').setAttribute('aria-pressed', voice); say(voice ? 'Commentary will be read aloud' : 'Commentary muted'); speak(voice && !busy ? stops[at].call : ''); }
+$('btn-voice').onclick = toggleVoice;
+// Crowd noise: on unless the visitor has turned it off. Browsers hold sound back until the first
+// click or key press, so that is when it actually begins.
+const crowd = createCrowd();
+let hush = false; try { hush = localStorage.getItem('matchday-crowd') === 'off'; } catch {}
+crowd.mute(hush); $('btn-sound').setAttribute('aria-pressed', !hush);
+function toggleSound() { hush = !hush; try { localStorage.setItem('matchday-crowd', hush ? 'off' : 'on'); } catch {} crowd.mute(hush); crowd.start(); $('btn-sound').setAttribute('aria-pressed', !hush); say(hush ? 'Crowd noise off' : 'Crowd noise on'); }
+$('btn-sound').onclick = toggleSound;
+for (const type of ['pointerdown', 'keydown']) addEventListener(type, () => crowd.start(), { capture: true });
+document.addEventListener('visibilitychange', () => crowd.pause(document.hidden));
+// Daylight or floodlights: follows the system setting until the visitor picks one.
+const lightPref = matchMedia('(prefers-color-scheme: light)');
+let picked = null;
+try { picked = localStorage.getItem('matchday-theme'); } catch {}
+function applyTheme() {
+  const day = (picked || (lightPref.matches ? 'day' : 'night')) === 'day';
+  root.dataset.theme = day ? 'day' : 'night';
+  $('btn-theme').firstChild.textContent = day ? 'Floodlights ' : 'Daylight ';
+  scene?.setTheme?.(day);
+}
+function toggleTheme() { picked = root.dataset.theme === 'day' ? 'night' : 'day'; try { localStorage.setItem('matchday-theme', picked); } catch {} applyTheme(); }
+lightPref.addEventListener('change', applyTheme);
+$('btn-theme').onclick = toggleTheme;
+applyTheme();
+$('btn-aerial').onclick = leave;
+enterBtn.onclick = enter;
+keys.addEventListener('click', e => { if (e.target === keys) keys.close(); });
+if (!('speechSynthesis' in window)) $('btn-voice').hidden = true;
+
+// --- Boot ---
+try {
+  const { createMatch } = await import('/assets/js/matchday.js');
+  scene = await createMatch({ canvas: $('stage'), squad, panel, calm, onEvent: what => { if (what === 'goal') crowd.roar(); } });
+  applyTheme();
+  scene.start();
+  window.matchday = scene; scene.crowd = crowd;
+} catch (err) {
+  // No WebGL: the commentary still works as a plain walk through the squad.
+  console.warn('3D unavailable, showing the squad without it.', err);
+  document.body.classList.add('flat');
+  const now = async () => {};
+  scene = { enter: now, aerial: now, play: now, skip() {}, cut() {}, layout() {} };
+}
+enterBtn.disabled = false;
+enterBtn.innerHTML = 'Enter the stadium <kbd>↵</kbd>';
+enterBtn.focus({ preventScroll: true });
+// A link from the kit room lands straight on that player.
+const want = location.hash === '#full-time' ? N : +location.hash.slice(1) - 1;
+if (want >= 0 && want <= N) { root.dataset.view = 'match'; scene.cut(want); freeze(want, { quiet: true }); }
+</script>
+</body>
+</html>
