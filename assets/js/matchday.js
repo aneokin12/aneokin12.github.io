@@ -118,7 +118,7 @@ const SLIDES = [
   { ...SLIDE, sx: -.22, laf: .3, lao: .5, le: 1.5, raf: 2.6, rao: .3, re: .9 },          // one fist pumping
 ];
 
-export async function createMatch({ canvas, squad, panel, calm, onEvent = () => {} }) {
+export async function createMatch({ canvas, squad, panel, calm, orbit: from = .9, onEvent = () => {} }) {
   await Promise.all([document.fonts.load('800 60px Anybody'), document.fonts.load('900 60px Anybody')]).catch(() => {});
   const crests = await Promise.all(squad.map(p => loadLogo(p.crest, p.kit.tint)));
   const N = squad.length;
@@ -694,7 +694,7 @@ export async function createMatch({ canvas, squad, panel, calm, onEvent = () => 
     const f = V(Math.sin(s.yaw), 0, Math.cos(s.yaw)), d = (upright ? 4.6 : 3.3) * back;
     return { pos: V(s.x, 1.32 + (back - 1) * .9, s.z).addScaledVector(f, d).add(V(f.z * .9, 0, -f.x * .9)), look: V(s.x, 1.02, s.z) };
   }
-  let orbit = .9;
+  let orbit = from;
   const orbitPose = () => { const r = upright ? 265 : 196, h = upright ? 130 : 74; return { pos: V(Math.sin(orbit) * r, h, Math.cos(orbit) * r), look: V(0, upright ? -6 : 4, 0) }; };
 
   // --- After the goal: sprint for the corner flag and finish on the knees. Returns where a player is
@@ -869,6 +869,9 @@ export async function createMatch({ canvas, squad, panel, calm, onEvent = () => 
   const api = {
     setTheme,
     start() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } },
+    // Where the aerial camera has got to on its lap, so another page can carry on from the same spot.
+    get orbit() { return orbit; },
+    dispose() { running = false; removeEventListener('resize', layout); renderer.dispose(); renderer.forceContextLoss(); },
     layout,
     // Fly down from the aerial view to the keeper.
     enter() { return new Promise(done => { cut(0); const b = closeUp(cur[0]); if (calm) return done(); fly = { t: 0, T: 3.6, a: orbitPose(), b, lift: 6, shift: true }; mode = 'fly'; finish = done; }); },

@@ -465,7 +465,10 @@ if (!('speechSynthesis' in window)) $('btn-voice').hidden = true;
 // --- Boot ---
 try {
   const { createMatch } = await import('/assets/js/matchday.js');
-  scene = await createMatch({ canvas: $('stage'), squad, panel, calm, onEvent: what => { if (what === 'goal') crowd.roar(); } });
+  // Picked from the split screen on the home page: carry on the lap from where that view had got to.
+  const lap = parseFloat(new URLSearchParams(location.search).get('orbit'));
+  if (location.search) history.replaceState(null, '', location.pathname + location.hash);
+  scene = await createMatch({ canvas: $('stage'), squad, panel, calm, orbit: Number.isFinite(lap) ? lap : undefined, onEvent: what => { if (what === 'goal') crowd.roar(); } });
   applyTheme();
   scene.start();
   window.matchday = scene; scene.crowd = crowd;
